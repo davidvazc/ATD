@@ -50,14 +50,13 @@ end
  % Part 2
     
  
-% ex. 4.1
+%% ex. 4.1
 % calcular DFT
-
 %clear all
 
 j=1; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
 % i=3; % x,y,z axis
-for i = 1:3
+for i = 1:3 % i=axis
     close all
     
     activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
@@ -65,13 +64,13 @@ for i = 1:3
     N = numel(activity);
 
     % calcular vector de frequencias
-    if (mod(N,2)==0)
+    %if (mod(N,2)==0)
         % se numero de pontos de pontos do sinal for par
-        f = -Fs/2:Fs/N:Fs/2-Fs/N;
-    else
+    %    f = -Fs/2:Fs/N:Fs/2-Fs/N;
+    %else
          % se numero de pontos de pontos do sinal for impar
-        f = -Fs/2+Fs/(2*N):Fs/N:Fs/2-Fs/(2*N);
-    end
+    %    f = -Fs/2+Fs/(2*N):Fs/N:Fs/2-Fs/(2*N);
+    %end
 
     % janelas disponiveis ver https://www.mathworks.com/help/dsp/ref/windowfunction.html
 
@@ -123,4 +122,34 @@ end
 
 %lgd = legend;
 %lgd.Title.String = 'data';
+
+
+%% ex. 5.
+% STFT no eixo Z para um ficheiro de dados à escolha
+%{ 
+i = 3; %eixo z
+j = 13; %activity
+activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
+
+Tframe= 0.128; %largura da janela em analise em s
+Toverlap = 0.064; % sobreposição das janelas em s
+Nframe= round(Tframe*Fs); %numero de amostras na janela
+Noverlap = round(Toverlap*Fs); % numero de amostras sobrepostas
+
+h = hamming(Nframe); % janela de hamming
+
+if mod(Nframe, 2)==0
+    f_frame = -Fs/2:Fs/Nframe:Fs/2-Fs/Nframe;
+else
+    f_frame = -Fs/2+Fs/(2*Nframe):Fs/Nframe:Fs/2-Fs/(2*Nframe);
+end
+
+% itera sobre sinal da actividade com janelas sobrepostas
+for ii = 1:Nframe-Noverlap:N-Nframe
+    % aplicar a janela ao sinal do tempo
+    x_frame = activity(ii:ii+Nframe-1).*h;
+    
+    % ver na fp 9...
+end
+%}
 
