@@ -118,7 +118,7 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
             %axis tight
         end
 
-        saveas(figure(i+1), [pwd, '/exports/export_' activity_label '_' current_axis{i} '.pdf']);
+        saveas(figure(i+1), [pwd, '/exports/export_' activity_label '_' current_axis{i} '_' sprintf('%s', acc_file{1}) '.pdf']);
     end
 
     % alternative DFT with my_fft method
