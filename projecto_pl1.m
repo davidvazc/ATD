@@ -54,11 +54,14 @@ end
 % calcular DFT
 %clear all
 
-j=1; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
+%figure(2); % all plots on same drawing
+
+j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
 % i=3; % x,y,z axis
 for i = 1:3 % i=axis
     close all
-    
+    figure(i+1);
+
     activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
     activity_label = activities{all_labels(ix_labels(j),3)};
     N = numel(activity);
@@ -74,13 +77,13 @@ for i = 1:3 % i=axis
 
     % janelas disponiveis ver https://www.mathworks.com/help/dsp/ref/windowfunction.html
 
-    windows = [rectwin(N) blackman(N) hamming(N) hann(N)];
+    windows = [rectwin(N) blackman(N) hamming(N) hann(N)]; % other:  taylorwin(N) bartlett(N)...
     windows_names = {'rectwin' 'blackman' 'hamming' 'hann'};
+    
     current_axis = {'X' 'Y' 'Z'};
 
-    X = fftshift(fft(activity)); % DFT do sinal sem janela
-
-    figure(2);
+    %X = fftshift(fft(activity)); % DFT do sinal sem janela
+    [f,X] = my_fft(activity,Fs);
 
     subplot(321)
     plot(f,activity), hold on
@@ -98,17 +101,18 @@ for i = 1:3 % i=axis
 
     % itera sobre as janelas definidas em cima
     for w=1:size(windows,2)
+        %wvtool(windows(:,w)) % visualizar janela usada
         %X = fftshift(fft(activity.*windows(:,i))); % DFT do sinal com janela
         [f,X] = my_fft(activity.*windows(:,w),Fs); % my_fft func das PL
         subplot(3,2,w+2)
         plot(f,abs(X)), hold on
-        title(['DFT do Sinal - ' activity_label ' - ' windows_names{i}]);
+        title(['DFT do Sinal - ' activity_label ' - ' windows_names{w}]);
         ylabel('Magnitude = |X|')
         xlabel('f [Hz]')
         %axis tight
     end
 
-    saveas(figure(2), [pwd, '/exports/export_' activity_label '_' current_axis{i} '.pdf']);
+    saveas(figure(i+1), [pwd, '/exports/export_' activity_label '_' current_axis{i} '.png']);
 end
 
 % alternative DFT with my_fft method
