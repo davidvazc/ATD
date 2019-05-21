@@ -36,7 +36,7 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
             else
                 ypos=max(data(:,i))-(0.2*max(data(:,i)));
             end
-            % nao está a adicionar as labels:
+            % nao est?? a adicionar as labels:
             %text(t(all_labels(ix_labels(j),4))/60,ypos,activities{all_labels(ix_labels(j),3)}, 'for ');
         end
     end
@@ -120,7 +120,21 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
 
         saveas(figure(i+1), [pwd, '/exports/export_' activity_label '_' current_axis{i} '.pdf']);
     end
+%% 4.2
+%vou buscar informacao de cada eixo 1,2,3 e junto tudo no mesmo grafico
+%para detetar todos os picos misturados
+x=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),1)
+y=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),2)
+z=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),3)
 
+mag = sqrt(sum(x.^2 + y.^2 + z.^2, 2))
+magNoG = mag - mean(mag);
+%fazer tambem para o eixo Z
+
+minPeakHeight = std(magNoG);
+
+[pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+mag(locs(1))*60
     % alternative DFT with my_fft method
     %[f,Syn] = my_fft(activity.*winRect,Fs);
     %subplot(414)
@@ -136,14 +150,14 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
 
     %% ex. 5.
     % Freq/Time min |Power
-    % STFT no eixo Z para um ficheiro de dados à escolha
+    % STFT no eixo Z para um ficheiro de dados ?? escolha
     %{ 
     i = 3; %eixo z
     j = 13; %activity
     activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
 
     Tframe= 0.128; %largura da janela em analise em s
-    Toverlap = 0.064; % sobreposição das janelas em s
+    Toverlap = 0.064; % sobreposi????o das janelas em s
     Nframe= round(Tframe*Fs); %numero de amostras na janela
     Noverlap = round(Toverlap*Fs); % numero de amostras sobrepostas
 
