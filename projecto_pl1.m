@@ -3,7 +3,7 @@
 % load data
 % read_raw_data
 
-for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user02.txt', 'acc_exp04_user03.txt'}
+for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user02.txt', 'acc_exp04_user02.txt', 'acc_exp05_user03.txt', 'acc_exp06_user03.txt', 'acc_exp07_user04.txt', 'acc_exp08_user04.txt', 'acc_exp09_user05.txt', 'acc_exp10_user05.txt'}
     dacc = importfile(['HAPT Data Set/RawData/' sprintf('%s', acc_file{1})], '%f%f%f%[^\n\r]');
 
     % load labels
