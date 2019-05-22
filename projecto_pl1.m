@@ -11,18 +11,19 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
 
     % get labels for current file
     %ix_labels=intersect(find(all_labels(:,1)==str2num(Expr)), find(all_labels(:,2)==str2num(User{u})))
-    ix_labels=intersect(find(all_labels(:,1)==01), find(all_labels(:,2)==01)) %exp 01 user 01
+    ix_labels=intersect(find(all_labels(:,1)==01), find(all_labels(:,2)==01)); %exp 01 user 01
 
     data = dacc;
     % time vector
     Fs = 50 %hz
-    activities={'W','WU','WD','S','ST','L','ST','SS','SL','LS','STL','LTS'}
+    activities={'W','WU','WD','S','ST','L','ST','SS','SL','LS','STL','LTS'};
     t=[0:size(data,1)-1]./Fs;
 
     % data size
     [n_points, n_plots]=size(data);
 
     % fazer plot
+    %{
     figure(1)
     for i=1:n_plots
         subplot(n_plots,1,i); plot(t./60,data(:,i),'k--')
@@ -120,21 +121,48 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
 
         saveas(figure(i+1), [pwd, '/exports/export_' activity_label '_' current_axis{i} '.pdf']);
     end
+%}
+
 %% 4.2
-%vou buscar informacao de cada eixo 1,2,3 e junto tudo no mesmo grafico
-%para detetar todos os picos misturados
-x=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),1)
-y=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),2)
-z=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),3)
 
-mag = sqrt(sum(x.^2 + y.^2 + z.^2, 2))
-magNoG = mag - mean(mag);
-%fazer tambem para o eixo Z
+%primeira implementacao abordado os 3 eixos em simultaneo
+numeroElementos=0;
+total=0;
+for k=0:3
+    %vai carregar a informacao dos 3 eixos
+    x=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),1);
+    y=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),2);
+    z=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),3);
+    %associa a informacao dos 3 eixos numa so funcao "mag"
+    mag = sqrt(sum(x.^2 + y.^2 + z.^2, 2));
+    %delimita o ponto medio para de seguida determinar os picos
+    magNoG = mag - mean(mag);
+    minPeakHeight = std(magNoG);
+    [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+    %determina a frequencia do primeiro pico e multiplica pelo tempo 60s
+    %mag(locs(1))*60
+    total=total+ (mag(locs(1))*60);
+    numeroElementos=numeroElementos+1;
+end
+media=total/numeroElementos;
 
-minPeakHeight = std(magNoG);
+%segunda implementacao aboradando agora apenas o eixo dos z's
+numeroElementos1=0;
+total1=0;
+for l=0:3
+    x=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),3);
+    magNoG1 = x - mean(x);
+    minPeakHeight = std(magNoG1);
+    [pks1,locs] = findpeaks(x,'MINPEAKHEIGHT', minPeakHeight);
+    x(locs(1))* 60;
+    total1=total1+ x(locs(1))*60;
+    numeroElementos=numeroElementos+1;
+end
+media1=total1/numeroElementos1;
+%faltam em ambos os casos o desvio padrao
 
-[pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
-mag(locs(1))*60
+
+
     % alternative DFT with my_fft method
     %[f,Syn] = my_fft(activity.*winRect,Fs);
     %subplot(414)
