@@ -146,7 +146,8 @@ for k=0:3
 end
 media=total/numeroElementos;
 
-%segunda implementacao aboradando agora apenas o eixo dos z's
+%segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
+%funcionar
 numeroElementos1=0;
 total1=0;
 for l=0:3
