@@ -128,21 +128,23 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
 %primeira implementacao abordado os 3 eixos em simultaneo
 numeroElementos=0;
 total=0;
-for k=0:3
-    %vai carregar a informacao dos 3 eixos
-    x=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),1);
-    y=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),2);
-    z=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),3);
-    %associa a informacao dos 3 eixos numa so funcao "mag"
-    mag = sqrt(sum(x.^2 + y.^2 + z.^2, 2));
-    %delimita o ponto medio para de seguida determinar os picos
-    magNoG = mag - mean(mag);
-    minPeakHeight = std(magNoG);
-    [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
-    %determina a frequencia do primeiro pico e multiplica pelo tempo 60s
-    %mag(locs(1))*60
-    total=total+ (mag(locs(1))*60);
-    numeroElementos=numeroElementos+1;
+for k=1:numel(ix_labels)
+    if all_labels(ix_labels(k),3) < 4
+        %vai carregar a informacao dos 3 eixos
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
+        y=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),2);
+        z=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
+        %associa a informacao dos 3 eixos numa so funcao "mag"
+        mag = sqrt(sum(x.^2 + y.^2 + z.^2, 2));
+        %delimita o ponto medio para de seguida determinar os picos
+        magNoG = mag - mean(mag);
+        minPeakHeight = std(magNoG);
+        [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+        %determina a frequencia do primeiro pico e multiplica pelo tempo 60s
+        %mag(locs(1))*60
+        total=total+ (mag(locs(1))*60);
+        numeroElementos=numeroElementos+1;
+    end
 end
 media=total/numeroElementos;
 
@@ -150,14 +152,16 @@ media=total/numeroElementos;
 %funcionar
 numeroElementos1=0;
 total1=0;
-for l=0:3
-    x=data(all_labels(ix_labels(13+k),4): all_labels(ix_labels(13+k),5),3);
-    magNoG1 = x - mean(x);
-    minPeakHeight = std(magNoG1);
-    [pks1,locs] = findpeaks(x,'MINPEAKHEIGHT', minPeakHeight);
-    x(locs(1))* 60;
-    total1=total1+ x(locs(1))*60;
-    numeroElementos=numeroElementos+1;
+for k=1:numel(ix_labels)
+    if all_labels(ix_labels(k),3) < 4
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
+        magNoG1 = x - mean(x);
+        minPeakHeight = std(magNoG1);
+        [pks1,locs] = findpeaks(x,'MINPEAKHEIGHT', minPeakHeight);
+        x(locs(1))* 60;
+        total1=total1+ x(locs(1))*60;
+        numeroElementos1=numeroElementos1+1;
+    end
 end
 media1=total1/numeroElementos1;
 %faltam em ambos os casos o desvio padrao
