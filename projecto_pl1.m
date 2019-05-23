@@ -168,18 +168,24 @@ media=total/numeroElementos
 %funcionar
 numeroElementos1=0;
 total1=0;
+close all
 for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) < 4
         x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
-        xdft=fftshift(fft(x));
-        magNoG1 = xdft - mean(xdft);
-        minPeakHeight = std(magNoG1);
-        [pks,locs] = findpeaks(abs(xdft),'MINPEAKHEIGHT', minPeakHeight);
+        %xdft=fftshift(fft(x));
+        [f,xdft] = my_fft(x,Fs);
+        plot(abs(f),abs(xdft))
+        magNoG1 = xdft - mean(abs(xdft));
+        %minPeakHeight = std(magNoG1);
+        max_x = max(abs(xdft));
+        min_mag = max_x-(0.2*max_x);
+        [pks,locs] = findpeaks(abs(xdft),'MINPEAKHEIGHT', min_mag);
         l=1;
-        while(xdft(locs(l))<0)
+        while(f(locs(l))<0)
             l=l+1;
         end
-        xdft(locs(l))* 60;
+        fabs = abs(f);
+        fabs(locs(l))*60
         %guardar num array e chamr std no fim
         total1=total1+ xdft(locs(1))*60;
         numeroElementos1=numeroElementos1+1;
