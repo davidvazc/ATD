@@ -172,25 +172,31 @@ close all
 for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) < 4
         x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
-        %xdft=fftshift(fft(x));
-        [f,xdft] = my_fft(x,Fs);
-        plot(abs(f),abs(xdft))
-        magNoG1 = xdft - mean(abs(xdft));
-        %minPeakHeight = std(magNoG1);
+        [f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
+        %plot(f,abs(xdft))
         max_x = max(abs(xdft));
-        min_mag = max_x-(0.2*max_x);
+        min_mag = max_x-(0.8*max_x);
         [pks,locs] = findpeaks(abs(xdft),'MINPEAKHEIGHT', min_mag);
+        
+        % plot to debug peaks
+        %figure;
+        %plot(abs(xdft))
+        %hold on
+        %plot(locs,pks,'ro')
+        %hold off
+        
         l=1;
-        while(f(locs(l))<0)
-            l=l+1;
+        if l < numel(locs)
+            while(f(locs(l))<=0.5)
+                l=l+1;
+            end
+            steps = f(locs(l))*60
+            %guardar num array e chamr std no fim
+            total1=total1 + steps;
+            numeroElementos1=numeroElementos1+1;
+        else
+            disp('ERROR: could not calculate steps')
         end
-        fabs = abs(f);
-        fabs(locs(l))*60
-        %guardar num array e chamr std no fim
-        total1=total1+ xdft(locs(1))*60;
-        numeroElementos1=numeroElementos1+1;
-        
-        
     end
 end
 media1=total1/numeroElementos1
