@@ -5,7 +5,7 @@
 
 % load labels
 all_labels = importfile('HAPT Data Set/RawData/labels.txt', '%f%f%f%f%f%[^\n\r]');
-
+figure(4)
 for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'}, {'06','03'}, {'07','04'}, {'08','04'}, {'09','05'}, {'10','05'}}
     exp = acc_file{1}{1};
     user = acc_file{1}{2};
@@ -139,6 +139,10 @@ for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) < 4
         %vai carregar a informacao dos 3 eixos
         x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
+        xd=fftshift(fft(x));
+        f=linspace(-25,25,numel(x));
+        
+        figure;plot(f,abs(xd))
         y=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),2);
         z=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
         %associa a informacao dos 3 eixos numa so funcao "mag"
@@ -146,7 +150,7 @@ for k=1:numel(ix_labels)
         %delimita o ponto medio para de seguida determinar os picos
         magNoG = mag - mean(mag);
         minPeakHeight = std(magNoG);
-        [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+        [pks, locs] = findpeaks(abs(xd), 'MINPEAKHEIGHT', minPeakHeight);
         %determina a frequencia do primeiro pico e multiplica pelo tempo 60s
         %mag(locs(1))*60
         total=total+ (mag(locs(1))*60);
@@ -199,7 +203,9 @@ for k=1:numel(ix_labels)
     if numel(locs) > 0
         picsX(k)= x(locs(1));  
     end
-    
+    figure;plot(magNoG)
+    hold on
+    plot(locs,pks,'ro')
     %y
     magNoG = y - mean(y);
     minPeakHeight = std(y);
@@ -228,7 +234,7 @@ figure(4)
 scatter3(XDin,YDin,ZDin, 'r', 'filled')
 hold on
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
-hold off
+
 
 
     %% ex. 5.
@@ -262,3 +268,4 @@ hold off
     %}
 
 end
+hold off
