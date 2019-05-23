@@ -3,26 +3,30 @@
 % load data
 % read_raw_data
 
-for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user02.txt', 'acc_exp04_user02.txt', 'acc_exp05_user03.txt', 'acc_exp06_user03.txt', 'acc_exp07_user04.txt', 'acc_exp08_user04.txt', 'acc_exp09_user05.txt', 'acc_exp10_user05.txt'}
-    dacc = importfile(['HAPT Data Set/RawData/' sprintf('%s', acc_file{1})], '%f%f%f%[^\n\r]');
+% load labels
+all_labels = importfile('HAPT Data Set/RawData/labels.txt', '%f%f%f%f%f%[^\n\r]');
 
-    % load labels
-    all_labels = importfile('HAPT Data Set/RawData/labels.txt', '%f%f%f%f%f%[^\n\r]');
-
+for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'}, {'06','03'}, {'07','04'}, {'08','04'}, {'09','05'}, {'10','05'}}
+    exp = acc_file{1}{1};
+    user = acc_file{1}{2};
+    fileName = sprintf('acc_exp%s_user%s.txt', exp, user)
+    dacc = importfile(['HAPT Data Set/RawData/' fileName], '%f%f%f%[^\n\r]');
+    
     % get labels for current file
     %ix_labels=intersect(find(all_labels(:,1)==str2num(Expr)), find(all_labels(:,2)==str2num(User{u})))
-    ix_labels=intersect(find(all_labels(:,1)==01), find(all_labels(:,2)==01)) %exp 01 user 01
+    ix_labels=intersect(find(all_labels(:,1)==str2num(exp)), find(all_labels(:,2)==str2num(user))); %exp 01 user 01
 
     data = dacc;
     % time vector
-    Fs = 50 %hz
-    activities={'W','WU','WD','S','ST','L','ST','SS','SL','LS','STL','LTS'}
+    Fs = 50; %hz
+    activities={'W','WU','WD','S','ST','L','ST','SS','SL','LS','STL','LTS'};
     t=[0:size(data,1)-1]./Fs;
 
     % data size
     [n_points, n_plots]=size(data);
 
     % fazer plot
+%{    
     figure(1)
     for i=1:n_plots
         subplot(n_plots,1,i); plot(t./60,data(:,i),'k--')
@@ -62,7 +66,8 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
 
     %figure(2); % all plots on same drawing
 
-    j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
+for j=1:numel(ix_labels)
+    %j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
     % i=3; % x,y,z axis
     for i = 1:3 % i=axis
         close all
@@ -118,23 +123,63 @@ for acc_file = {'acc_exp01_user01.txt', 'acc_exp02_user01.txt', 'acc_exp03_user0
             %axis tight
         end
 
-        saveas(figure(i+1), [pwd, '/exports/export_' activity_label '_' current_axis{i} '_' sprintf('%s', acc_file{1}) '.pdf']);
+
+        saveas(figure(i+1), [pwd, '/exports/export_' num2str(j) '_' activity_label '_' current_axis{i} '_' fileName '.pdf']);
+
     end
+end
+%}
+
 %% 4.2
-%vou buscar informacao de cada eixo 1,2,3 e junto tudo no mesmo grafico
-%para detetar todos os picos misturados
-x=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),1)
-y=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),2)
-z=data(all_labels(ix_labels(13),4): all_labels(ix_labels(13),5),3)
 
-mag = sqrt(sum(x.^2 + y.^2 + z.^2, 2))
-magNoG = mag - mean(mag);
-%fazer tambem para o eixo Z
+%primeira implementacao abordado os 3 eixos em simultaneo
+numeroElementos=0;
+total=0;
+for k=1:numel(ix_labels)
+    if all_labels(ix_labels(k),3) < 4
+        %vai carregar a informacao dos 3 eixos
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
+        y=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),2);
+        z=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
+        %associa a informacao dos 3 eixos numa so funcao "mag"
+        mag = sqrt(sum(x.^2 + y.^2 + z.^2, 2));
+        %delimita o ponto medio para de seguida determinar os picos
+        magNoG = mag - mean(mag);
+        minPeakHeight = std(magNoG);
+        [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+        %determina a frequencia do primeiro pico e multiplica pelo tempo 60s
+        %mag(locs(1))*60
+        total=total+ (mag(locs(1))*60);
+        numeroElementos=numeroElementos+1;
+    end
+end
+media=total/numeroElementos;
 
-minPeakHeight = std(magNoG);
+%segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
+%funcionar
+numeroElementos1=0;
+total1=0;
+for k=1:numel(ix_labels)
+    if all_labels(ix_labels(k),3) < 4
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
+        magNoG1 = x - mean(x);
+        minPeakHeight = std(magNoG1);
+        [pks1,locs] = findpeaks(x,'MINPEAKHEIGHT', minPeakHeight);
+        if numel(pks1) > 0
+            x(locs(1))* 60;
+            total1=total1+ x(locs(1))*60;
+            numeroElementos1=numeroElementos1+1;
+        else
+            k 
+            disp('error calculating peaks')
+        end
+    end
+end
+media1=total1/numeroElementos1;
+%faltam em ambos os casos o desvio padrao
 
-[pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
-mag(locs(1))*60
+
+
     % alternative DFT with my_fft method
     %[f,Syn] = my_fft(activity.*winRect,Fs);
     %subplot(414)
