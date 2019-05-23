@@ -6,6 +6,7 @@
 % load labels
 all_labels = importfile('HAPT Data Set/RawData/labels.txt', '%f%f%f%f%f%[^\n\r]');
 
+figure(4)
 for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'}, {'06','03'}, {'07','04'}, {'08','04'}, {'09','05'}, {'10','05'}}
     exp = acc_file{1}{1};
     user = acc_file{1}{2};
@@ -217,18 +218,18 @@ for k=1:numel(ix_labels)
 
 end
 
-XDin=picsX(1:3)
-YDin=picsY(1:3)
-ZDin=picsZ(1:3)
-XStat=picsX(4:numel(picsX))
-YStat=picsY(4:numel(picsX))
-ZStat=picsZ(4:numel(picsX))
+XDin=picsX(13:numel(picsX))
+YDin=picsY(13:numel(picsX))
+ZDin=picsZ(13:numel(picsX))
+XStat=picsX(1:12)
+YStat=picsY(1:12)
+ZStat=picsZ(1:12)
 
-figure(4)
-scatter3(XDin,YDin,ZDin, 'r', 'filled')
 hold on
+scatter3(XDin,YDin,ZDin, 'r', 'filled')
+
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
-hold off
+
 
 
     %% ex. 5.
@@ -262,3 +263,5 @@ hold off
     %}
 
 end
+hold off
+grid on
