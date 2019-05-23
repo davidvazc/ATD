@@ -26,7 +26,7 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     [n_points, n_plots]=size(data);
 
     % fazer plot
-    %{
+    
     figure(1)
     for i=1:n_plots
         subplot(n_plots,1,i); plot(t./60,data(:,i),'k--')
@@ -66,7 +66,8 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
 
     %figure(2); % all plots on same drawing
 
-    j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
+for j=1:numel(ix_labels)
+    %j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
     % i=3; % x,y,z axis
     for i = 1:3 % i=axis
         close all
@@ -122,8 +123,9 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
             %axis tight
         end
 
-        saveas(figure(i+1), [pwd, '/exports/export_' activity_label '_' current_axis{i} '.pdf']);
+        saveas(figure(i+1), [pwd, '/exports/export_' num2str(j) '_' activity_label '_' current_axis{i} '_' fileName '.pdf']);
     end
+end
 %}
 
 %% 4.2
@@ -166,6 +168,7 @@ for k=1:numel(ix_labels)
             total1=total1+ x(locs(1))*60;
             numeroElementos1=numeroElementos1+1;
         else
+            k 
             "error calculating peaks"
         end
     end
