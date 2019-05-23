@@ -14,7 +14,7 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     
     % get labels for current file
     %ix_labels=intersect(find(all_labels(:,1)==str2num(Expr)), find(all_labels(:,2)==str2num(User{u})))
-    ix_labels=intersect(find(all_labels(:,1)==exp), find(all_labels(:,2)==user)); %exp 01 user 01
+    ix_labels=intersect(find(all_labels(:,1)==str2num(exp)), find(all_labels(:,2)==str2num(user))); %exp 01 user 01
 
     data = dacc;
     % time vector
