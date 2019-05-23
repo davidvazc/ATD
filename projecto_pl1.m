@@ -158,7 +158,7 @@ for k=1:numel(ix_labels)
         magNoG1 = x - mean(x);
         minPeakHeight = std(magNoG1);
         [pks1,locs] = findpeaks(x,'MINPEAKHEIGHT', minPeakHeight);
-        x(locs(1))* 60;
+        x(locs(1)) * 60;
         total1=total1+ x(locs(1))*60;
         numeroElementos1=numeroElementos1+1;
     end
