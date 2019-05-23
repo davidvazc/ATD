@@ -168,7 +168,6 @@ media=total/numeroElementos
 %funcionar
 numeroElementos1=0;
 total1=0;
-close all
 for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) < 4
         x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
@@ -187,7 +186,7 @@ for k=1:numel(ix_labels)
         
         l=1;
         if l < numel(locs)
-            while(f(locs(l))<=0.5)
+            while(f(locs(l))<=0)
                 l=l+1;
             end
             steps = f(locs(l))*60
@@ -195,6 +194,8 @@ for k=1:numel(ix_labels)
             total1=total1 + steps;
             numeroElementos1=numeroElementos1+1;
         else
+            disp(fileName)
+            disp(k)
             disp('ERROR: could not calculate steps')
         end
     end
@@ -202,7 +203,7 @@ end
 media1=total1/numeroElementos1
 %faltam em ambos os casos o desvio padrao
 
-%{
+
 %% 4.3
 picsX = zeros(numel(ix_labels),1);
 picsY= zeros(numel(ix_labels),1);
@@ -214,42 +215,61 @@ for k=1:numel(ix_labels)
     z=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
    
     %delimita o ponto medio para de seguida determinar os picos
+    
     %x
-
-    magNoG = x - mean(x);
-    minPeakHeight = std(x);
-    [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+    [f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
+    max_x = max(abs(xdft));
+    min_mag = max_x - (0.2*max_x);
+    [pks,locs] = findpeaks(abs(xdft),'MINPEAKHEIGHT', min_mag);
     if numel(locs) > 0
-        picsX(k)= x(locs(1));  
+        picsX(k)= xdft(locs(1));  
     end
     
+    % plot x for debug peaks
+    figure;
+    plot(abs(xdft))
+    hold on
+    plot(locs,pks,'ro')
+
+    
     %y
-    magNoG = y - mean(y);
-    minPeakHeight = std(y);
-    [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+    [f,ydft] = my_fft(y.*hamming(numel(y)),Fs);
+    max_x = max(abs(ydft));
+    min_mag = max_x-(0.2*max_x);
+    [pks,locs] = findpeaks(abs(ydft),'MINPEAKHEIGHT', min_mag);
     if numel(locs) > 0
-        picsY(k)= y(locs(1));  
+        picsY(k)= ydft(locs(1));  
     end
+    
+    % plot y for debug peaks
+    %plot(abs(ydft))
+    %plot(locs,pks,'ro')
+
     %z
-    magNoG = z - mean(z);
-    minPeakHeight = std(z);
-    [pks, locs] = findpeaks(magNoG, 'MINPEAKHEIGHT', minPeakHeight);
+    [f,zdft] = my_fft(z.*hamming(numel(z)),Fs);
+    max_x = max(abs(zdft));
+    min_mag = max_x-(0.2*max_x);
+    [pks,locs] = findpeaks(abs(zdft),'MINPEAKHEIGHT', min_mag);
     if numel(locs) > 0
-        picsZ(k)= z(locs(1));  
+        picsZ(k)= zdft(locs(1));  
     end
 
+    % plot z for debug peaks
+    %plot(abs(zdft))
+    %plot(locs,pks,'ro')
+    
+    hold off
 end
 
-XDin=picsX(13:numel(picsX))
-YDin=picsY(13:numel(picsX))
-ZDin=picsZ(13:numel(picsX))
-XStat=picsX(1:12)
-YStat=picsY(1:12)
-ZStat=picsZ(1:12)
+XDin=picsX(13:numel(picsX));
+YDin=picsY(13:numel(picsX));
+ZDin=picsZ(13:numel(picsX));
+XStat=picsX(1:12);
+YStat=picsY(1:12);
+ZStat=picsZ(1:12);
 
 hold on
 scatter3(XDin,YDin,ZDin, 'r', 'filled')
-
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
 
 
@@ -285,7 +305,6 @@ scatter3(XStat,YStat,ZStat, 'b', 'filled')
     %}
 %}
 end
-
 
 hold off
 grid on
