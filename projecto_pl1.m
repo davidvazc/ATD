@@ -22,10 +22,10 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
 
     data = dacc;
     
+    Fs = 50; %hz
+
     % time vector
     t=[0:size(data,1)-1]./Fs;
-
-    Fs = 50; %hz
     
     % labels
     activities={'W','W\_U','W\_D','SIT','STAND',...
@@ -61,8 +61,10 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     %% ex. 4.1
     % calcular DFT com aplicação de diferentes janelas
     % export plots to PDF files for analysis...
-    %figure(2); % all plots on same drawing
     %{
+    figure(2);
+    hold on % all plots on same drawing
+    
     for j=1:numel(ix_labels)
         %j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
         % i=3; % x,y,z axis
@@ -83,18 +85,18 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
             %X = fftshift(fft(activity)); % DFT do sinal sem janela
             [f,X] = my_fft(activity,Fs);
 
-            subplot(321)
-            plot(f,activity), hold on
-            title(['Sinal original - ' current_axis{i} ' axis - ' activity_label]);
-            ylabel('?')
-            xlabel('t [??]')
+            %subplot(321)
+            %plot(f,activity), hold on
+            %title(['Sinal original - ' current_axis{i} ' axis - ' activity_label]);
+            %ylabel('?')
+            %xlabel('t [??]')
             %axis tight
 
-            subplot(322)
-            plot(f,abs(X)), hold on
-            title('|DFT| do sinal sem janela');
-            ylabel('Magnitude = |X|')
-            xlabel('f [Hz]')
+            %subplot(322)
+            %plot(f,abs(X)), hold on
+            %title('|DFT| do sinal sem janela');
+            %ylabel('Magnitude = |X|')
+            %xlabel('f [Hz]')
             %axis tight
 
             % itera sobre as janelas definidas em cima
@@ -102,15 +104,17 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
                 %wvtool(windows(:,w)) % visualizar janela usada
                 %X = fftshift(fft(activity.*windows(:,i))); % DFT do sinal com janela
                 [f,X] = my_fft(activity.*windows(:,w),Fs); % my_fft func das PL
-                subplot(3,2,w+2)
+                %subplot(3,2,w+2)
                 plot(f,abs(X)), hold on
-                title(['DFT do Sinal - ' activity_label ' - ' windows_names{w}]);
+                %title(['DFT do Sinal - ' activity_label ' - ' windows_names{w}]);
+                title(['DFT do Sinal - ' activity_label]);
                 ylabel('Magnitude = |X|')
                 xlabel('f [Hz]')
                 %axis tight
             end
+            legend(windows_names,'Location','southwest')
             % export plot to file for analysis
-            saveas(figure(i+1), [pwd, '/exports/export_' num2str(j) '_' activity_label '_' current_axis{i} '_' fileName '.pdf']);
+            saveas(figure(i+1), [pwd, '/exports/export_' num2str(j) '_' all_labels(ix_labels(j),3) '_' current_axis{i} '_' fileName '.pdf']);
         end
     end
     %}
@@ -148,7 +152,9 @@ for k=1:numel(ix_labels)
     end
 end
 media=total/numeroElementos
+%}
 
+%{
 %segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
 %funcionar
 numeroElementos1=0;
@@ -189,8 +195,29 @@ media1=total1/numeroElementos1
 %faltam em ambos os casos o desvio padrao
 %}
 
+% 4.2 terceira tentativa
+numeroElementos1=0;
+total1=0;
+for k=1:numel(ix_labels)
+    if all_labels(ix_labels(k),3) < 4
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
+        [f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
+        xd=detrend(xdft);
+        [amplitude,indice]=max(xd);
+        amplitude
+        indice
+        plot(f,abs(xdft)) 
+        
+        
+        
+    end
+end
+media1=total1/numeroElementos1
+%faltam em ambos os casos o desvio padrao
+
 
 %% 4.3
+%{
 figure(4)
 picsX = zeros(numel(ix_labels),1);
 picsY= zeros(numel(ix_labels),1);
@@ -258,43 +285,60 @@ ZStat=picsZ(1:12);
 hold on
 scatter3(XDin,YDin,ZDin, 'r', 'filled')
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
-
+%}
 
 
     %% ex. 5.
     % Freq/Time min |Power
     % STFT no eixo Z para um ficheiro de dados ?? escolha
-    %{ 
+    %{
     i = 3; %eixo z
-    j = 13; %activity
-    activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
+    % j = 13; %activity
+    for j=1:numel(ix_labels)
+        activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
 
-    Tframe= 0.128; %largura da janela em analise em s
-    Toverlap = 0.064; % sobreposi????o das janelas em s
-    Nframe= round(Tframe*Fs); %numero de amostras na janela
-    Noverlap = round(Toverlap*Fs); % numero de amostras sobrepostas
+        N = numel(activity);
+        Tframe= 0.128; %largura da janela em analise em s
+        Toverlap = 0.064; % sobreposi????o das janelas em s
+        Nframe= round(Tframe*Fs); %numero de amostras na janela
+        Noverlap = round(Toverlap*Fs); % numero de amostras sobrepostas
 
-    h = hamming(Nframe); % janela de hamming
+        h = hamming(Nframe); % janela de hamming
 
-    if mod(Nframe, 2)==0
-        f_frame = -Fs/2:Fs/Nframe:Fs/2-Fs/Nframe;
-    else
-        f_frame = -Fs/2+Fs/(2*Nframe):Fs/Nframe:Fs/2-Fs/(2*Nframe);
-    end
+        if mod(Nframe, 2)==0
+            f_frame = -Fs/2:Fs/Nframe:Fs/2-Fs/Nframe;
+        else
+            f_frame = -Fs/2+Fs/(2*Nframe):Fs/Nframe:Fs/2-Fs/(2*Nframe);
+        end
 
-    % itera sobre sinal da actividade com janelas sobrepostas
-    for ii = 1:Nframe-Noverlap:N-Nframe
-        % aplicar a janela ao sinal do tempo
-        x_frame = activity(ii:ii+Nframe-1).*h;
+        freq_relev = [];
+        nframes = 0; %para guardar freq relevantes
+        tframes = [];
 
+        % itera sobre sinal da actividade com janelas sobrepostas
         % ver na fp 9...
+        for ii = 1:Nframe-Noverlap:N-Nframe
+            % aplicar a janela ao sinal do tempo
+            x_frame = activity(ii:ii+Nframe-1).*h;
+
+            % obter a magnitude da fft do sinal
+            m_X_frame=abs(fftshift(fft(x_frame)));
+
+            % obter o maximo da magnitude do sinal
+            m_X_frame_max = max(m_X_frame);
+
+            % encontrar os indices do maximo da magnitude do sinal
+            ind = find(abs(m_X_frame-m_X_frame_max)<0.001);
+
+            % encontrar as frequencias correspondentes ao maximo de 
+            %freq_relev = [freq_relev, f_frame(ind(2))]; % buscar o indice 2 para a frequencia positiva
+
+            nframes = nframes+1;
+        end
     end
-    %}
 %}
 
 end
 
 hold off
 grid on
-
-
