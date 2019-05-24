@@ -5,8 +5,12 @@
 
 % load labels
 all_labels = importfile('HAPT Data Set/RawData/labels.txt', '%f%f%f%f%f%[^\n\r]');
-figure(4)
+
+close all
+
 for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'}, {'06','03'}, {'07','04'}, {'08','04'}, {'09','05'}, {'10','05'}}
+
+    %% ex 1, 2 e 3
     exp = acc_file{1}{1};
     user = acc_file{1}{2};
     fileName = sprintf('acc_exp%s_user%s.txt', exp, user)
@@ -17,118 +21,99 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     ix_labels=intersect(find(all_labels(:,1)==str2num(exp)), find(all_labels(:,2)==str2num(user))); %exp 01 user 01
 
     data = dacc;
+    
     % time vector
-    Fs = 50; %hz
-    activities={'W','WU','WD','S','ST','L','ST','SS','SL','LS','STL','LTS'};
     t=[0:size(data,1)-1]./Fs;
 
+    Fs = 50; %hz
+    
+    % labels
+    activities={'W','W\_U','W\_D','SIT','STAND',...
+    'LAY','STAND\_SIT','SIT\_STAND','SIT\_LIE','LIE\_SIT',...
+    'STAD\_LIE','LIE\_STAND'};
+    Sensors={'ACC\_X','ACC\_Y','ACC\_Z'};
+    
     % data size
     [n_points, n_plots]=size(data);
 
-    % fazer plot
-%{    
-    figure(1)
+    % fazer plot dos dados ---->
+    %{
+    figure(str2num(exp))
     for i=1:n_plots
         subplot(n_plots,1,i); plot(t./60,data(:,i),'k--')
-        % axis[0 t[end]./60 min(data(:,i)) nax(data(:,i))]
-        % xlabel('time in min')
+        xlabel('Time (min)','fontsize',16,'fontweight','bold');
+        ylabel(Sensors{i},'fontsize',16,'fontweight','bold');
         hold on
         for j=1:numel(ix_labels)
             plot(t(all_labels(ix_labels(j),4):all_labels(ix_labels(j),5))./60,data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i))
-            if (mod(j,2)==1)
+            if mod(j,2)==1 %Intercalate labels to avoid superposition
                 ypos=min(data(:,i))-(0.2*min(data(:,i)));
             else
                 ypos=max(data(:,i))-(0.2*max(data(:,i)));
             end
-            % nao est?? a adicionar as labels:
-            %text(t(all_labels(ix_labels(j),4))/60,ypos,activities{all_labels(ix_labels(j),3)}, 'for ');
+                text(t(all_labels(ix_labels(j),4))/60,...
+                    ypos,activities{all_labels(ix_labels(j),3)})
         end
     end
-    % for j=1:numel(ix_labels) ciclo sobre ix_labels 
-        % plot do tempo para os intervalos a q corresponde
-        % text( com a anotacao correspondente
-        %if mod(j,2)==1 % 
-        %    ypos=min(
-        %else
-        %    ypos=max(
-        %end
-
-     % Part 2
-
-
-     for i = 1:3
-
-     end
+    %}
+    % <---- fazer plot
 
     %% ex. 4.1
-    % calcular DFT
-    %clear all
-
+    % calcular DFT com aplicação de diferentes janelas
+    % export plots to PDF files for analysis...
     %figure(2); % all plots on same drawing
+    %{
+    for j=1:numel(ix_labels)
+        %j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
+        % i=3; % x,y,z axis
+        for i = 1:3 % i=axis
+            close all
+            figure(i+1);
 
-for j=1:numel(ix_labels)
-    %j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
-    % i=3; % x,y,z axis
-    for i = 1:3 % i=axis
-        close all
-        figure(i+1);
+            activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
+            activity_label = activities{all_labels(ix_labels(j),3)};
+            N = numel(activity);
 
-        activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
-        activity_label = activities{all_labels(ix_labels(j),3)};
-        N = numel(activity);
+            % janelas disponiveis ver https://www.mathworks.com/help/dsp/ref/windowfunction.html
+            windows = [rectwin(N) blackman(N) hamming(N) hann(N)]; % other:  taylorwin(N) bartlett(N)...
+            windows_names = {'rectwin' 'blackman' 'hamming' 'hann'};
 
-        % calcular vector de frequencias
-        %if (mod(N,2)==0)
-            % se numero de pontos de pontos do sinal for par
-        %    f = -Fs/2:Fs/N:Fs/2-Fs/N;
-        %else
-             % se numero de pontos de pontos do sinal for impar
-        %    f = -Fs/2+Fs/(2*N):Fs/N:Fs/2-Fs/(2*N);
-        %end
+            current_axis = {'X' 'Y' 'Z'};
 
-        % janelas disponiveis ver https://www.mathworks.com/help/dsp/ref/windowfunction.html
+            %X = fftshift(fft(activity)); % DFT do sinal sem janela
+            [f,X] = my_fft(activity,Fs);
 
-        windows = [rectwin(N) blackman(N) hamming(N) hann(N)]; % other:  taylorwin(N) bartlett(N)...
-        windows_names = {'rectwin' 'blackman' 'hamming' 'hann'};
+            subplot(321)
+            plot(f,activity), hold on
+            title(['Sinal original - ' current_axis{i} ' axis - ' activity_label]);
+            ylabel('?')
+            xlabel('t [??]')
+            %axis tight
 
-        current_axis = {'X' 'Y' 'Z'};
-
-        %X = fftshift(fft(activity)); % DFT do sinal sem janela
-        [f,X] = my_fft(activity,Fs);
-
-        subplot(321)
-        plot(f,activity), hold on
-        title(['Sinal original - ' current_axis{i} ' axis - ' activity_label]);
-        ylabel('?')
-        xlabel('t [??]')
-        %axis tight
-
-        subplot(322)
-        plot(f,abs(X)), hold on
-        title('|DFT| do sinal sem janela');
-        ylabel('Magnitude = |X|')
-        xlabel('f [Hz]')
-        %axis tight
-
-        % itera sobre as janelas definidas em cima
-        for w=1:size(windows,2)
-            %wvtool(windows(:,w)) % visualizar janela usada
-            %X = fftshift(fft(activity.*windows(:,i))); % DFT do sinal com janela
-            [f,X] = my_fft(activity.*windows(:,w),Fs); % my_fft func das PL
-            subplot(3,2,w+2)
+            subplot(322)
             plot(f,abs(X)), hold on
-            title(['DFT do Sinal - ' activity_label ' - ' windows_names{w}]);
+            title('|DFT| do sinal sem janela');
             ylabel('Magnitude = |X|')
             xlabel('f [Hz]')
             %axis tight
+
+            % itera sobre as janelas definidas em cima
+            for w=1:size(windows,2)
+                %wvtool(windows(:,w)) % visualizar janela usada
+                %X = fftshift(fft(activity.*windows(:,i))); % DFT do sinal com janela
+                [f,X] = my_fft(activity.*windows(:,w),Fs); % my_fft func das PL
+                subplot(3,2,w+2)
+                plot(f,abs(X)), hold on
+                title(['DFT do Sinal - ' activity_label ' - ' windows_names{w}]);
+                ylabel('Magnitude = |X|')
+                xlabel('f [Hz]')
+                %axis tight
+            end
+            % export plot to file for analysis
+            saveas(figure(i+1), [pwd, '/exports/export_' num2str(j) '_' activity_label '_' current_axis{i} '_' fileName '.pdf']);
         end
-
-
-        saveas(figure(i+1), [pwd, '/exports/export_' num2str(j) '_' activity_label '_' current_axis{i} '_' fileName '.pdf']);
-
     end
-end
-%}
+    %}
 
 %% 4.2
 %{
@@ -163,7 +148,7 @@ for k=1:numel(ix_labels)
     end
 end
 media=total/numeroElementos
-%}
+
 %segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
 %funcionar
 numeroElementos1=0;
@@ -202,9 +187,11 @@ for k=1:numel(ix_labels)
 end
 media1=total1/numeroElementos1
 %faltam em ambos os casos o desvio padrao
+%}
 
 
 %% 4.3
+figure(4)
 picsX = zeros(numel(ix_labels),1);
 picsY= zeros(numel(ix_labels),1);
 picsZ= zeros(numel(ix_labels),1);
@@ -226,10 +213,10 @@ for k=1:numel(ix_labels)
     end
     
     % plot x for debug peaks
-    figure;
-    plot(abs(xdft))
-    hold on
-    plot(locs,pks,'ro')
+    %figure;
+    %plot(abs(xdft))
+    %hold on
+    %plot(locs,pks,'ro')
 
     
     %y
@@ -304,6 +291,7 @@ scatter3(XStat,YStat,ZStat, 'b', 'filled')
     end
     %}
 %}
+
 end
 
 hold off
