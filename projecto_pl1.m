@@ -127,6 +127,10 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
 %funcionar
 
 
+numeroElementos1=0;
+total1=0;
+fs=50;
+
 for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) == 3%1 walking, 2 walking upstairs 3 walking downstairs
         x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);%1-x 2-y 3-z
@@ -158,8 +162,88 @@ for k=1:numel(ix_labels)
 end
 
 %faltam em ambos os casos o desvio padrao
-
+%}
 %% 4.3
+
+peaks_X = zeros(numel(ix_labels),1);
+peaks_Y = zeros(numel(ix_labels),1);
+peaks_Z = zeros(numel(ix_labels),1);
+
+for k=1:numel(ix_labels)
+    x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
+    y=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),2);
+    z=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
+
+    xdft = fftshift(fft((x.*hamming(numel(x)))));
+    xdft(abs(xdft)<0.001)=0;
+    xdft = abs(xdft);
+    
+    ydft = fftshift(fft((y.*hamming(numel(y)))));
+    ydft(abs(ydft)<0.001)=0;
+    ydft = abs(ydft);
+        
+    zdft = fftshift(fft((z.*hamming(numel(z)))));
+    zdft(abs(zdft)<0.001)=0;
+    zdft = abs(zdft);
+    
+    N = numel(x);
+    if(mod(N,2)==0)
+        f = -Fs/2:Fs/N:fs/2-Fs/N;
+    else
+        f = -Fs/2+Fs/(2*N):Fs/N:Fs/2-fs/(2*N);
+    end
+
+    %plot(f,xdft);
+    %hold on
+    if all_labels(ix_labels(k),3) > 3
+        [pks,locs] = findpeaks(xdft,'MinPeakHeight', 1); % static
+        [pks,locs_y] = findpeaks(ydft,'MinPeakHeight', 1); % static
+        [pks_z,locs_z] = findpeaks(zdft,'MinPeakHeight', 1); % static
+    else
+        [pks,locs] = findpeaks(xdft,'MinPeakProminence', 8);
+        [pks_y,locs_y] = findpeaks(ydft,'MinPeakProminence', 8);
+        [pks_z,locs_z] = findpeaks(zdft,'MinPeakProminence', 8);
+    end
+    
+    index = find(f(locs)>-0.00001 & f(locs)<0.00001);
+    f1 = f(locs);
+    f2 = f(locs_y);
+    f3 = f(locs_z);
+    
+    if index > 0 & index < numel(f1) & index < numel(f2) & index < numel(f3)
+        peaks_X(k) = f1(index+1);
+        peaks_Y(k) = f2(index+1);
+        peaks_Z(k) = f3(index+1);
+    %elseif index > 0
+        %peaks_X(k) = f1(index);
+    else
+        disp(' no value ')
+        peaks_X(k) = 0;
+        peaks_Y(k) = 0;
+        peaks_Z(k) = 0;
+    end
+    
+    %plot(f1(index+1),10,'or');
+    %pause();
+end
+
+%hold on
+%scatter3(peaks_X,peaks_Y,peaks_Z, 'r', 'filled');
+
+
+XDin=peaks_X(13:numel(peaks_X));
+YDin=peaks_Y(13:numel(peaks_Y));
+ZDin=peaks_Z(13:numel(peaks_Z));
+XStat=peaks_X(1:12);
+YStat=peaks_Y(1:12);
+ZStat=peaks_Z(1:12);
+
+hold on
+scatter3(XDin,YDin,ZDin, 'r', 'filled')
+scatter3(XStat,YStat,ZStat, 'b', 'filled')
+
+%}
+
 %{
 figure(4)
 picsX = zeros(numel(ix_labels),1);
@@ -287,3 +371,4 @@ desvioPadrao=std(nonzeros(saveSteps))
 
 hold off
 grid on
+view(-80, 22)
