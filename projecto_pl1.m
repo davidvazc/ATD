@@ -13,7 +13,7 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     %% ex 1, 2 e 3
     exp = acc_file{1}{1};
     user = acc_file{1}{2};
-    fileName = sprintf('acc_exp%s_user%s.txt', exp, user)
+    fileName = sprintf('acc_exp%s_user%s.txt', exp, user);
     dacc = importfile(['HAPT Data Set/RawData/' fileName], '%f%f%f%[^\n\r]');
     
     % get labels for current file
@@ -202,12 +202,13 @@ media1=total1/numeroElementos1
 % 4.2 terceira tentativ
 %segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
 %funcionar
+
 numeroElementos1=0;
 total1=0;
 fs=50;
 for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) < 4
-        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
         %[f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
         xdft = fftshift(fft((x)));
         xdft(abs(xdft)<0.001)=0;
@@ -303,20 +304,24 @@ hold on
 scatter3(XDin,YDin,ZDin, 'r', 'filled')
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
 
+%}
+
+%% 4.4
 
 
-    %% ex. 5.
+
+%% ex. 5.
     % Freq/Time min |Power
     % STFT no eixo Z para um ficheiro de dados ?? escolha
     
-    i = 3; %eixo z
+    
     % j = 13; %activity
     for j=1:numel(ix_labels)
-        activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
-
+        activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),3);
+        %{
         N = numel(activity);
         Tframe= 0.128; %largura da janela em analise em s
-        Toverlap = 0.064; % sobreposi????o das janelas em s
+        Toverlap = 0.064; % sobreposicao das janelas em s
         Nframe= round(Tframe*Fs); %numero de amostras na janela
         Noverlap = round(Toverlap*Fs); % numero de amostras sobrepostas
 
@@ -331,7 +336,7 @@ scatter3(XStat,YStat,ZStat, 'b', 'filled')
         freq_relev = [];
         nframes = 0; %para guardar freq relevantes
         tframes = [];
-
+        
         % itera sobre sinal da actividade com janelas sobrepostas
         % ver na fp 9...
         for ii = 1:Nframe-Noverlap:N-Nframe
@@ -349,11 +354,39 @@ scatter3(XStat,YStat,ZStat, 'b', 'filled')
 
             % encontrar as frequencias correspondentes ao maximo de 
             %freq_relev = [freq_relev, f_frame(ind(2))]; % buscar o indice 2 para a frequencia positiva
-
+            
             nframes = nframes+1;
+            
+            
         end
+        %}
+        
+        
+        %{
+        wlen = 0.128; %largura da janela em analise em s
+        hop = 0.064; % sobreposicao das janelas em s
+        nfft = round(wlen*Fs); %numero de amostras na janela
+        
+        % stft matrix size estimation and preallocation
+        NUP = ceil((1+nfft)/2);     % calculate the number of unique fft points
+        L = 1+fix((xlen-wlen)/hop); % calculate the number of signal frames
+        STFT = zeros(NUP, L);       % preallocate the stft matrix
+        %win = blackman(wlen, 'periodic'); 
+        
+        figure(1)
+        stft(activity,'Window',kaiser(256,5),'OverlapLength',Fs);
+        colormap bone
+        view(-45,65)
+        %}
+        
+        
+       % plot(activity)
+        %xlabel('t [s]')
+        %ylabel('f [Hz]')
+        %title('Sequencia de frequencias por janelas');
     end
-%}
+    
+
 
 end
 
