@@ -7,13 +7,14 @@
 all_labels = importfile('HAPT Data Set/RawData/labels.txt', '%f%f%f%f%f%[^\n\r]');
 
 close all
-
+saveSteps = zeros(200,1);
+contador=1;
 for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'}, {'06','03'}, {'07','04'}, {'08','04'}, {'09','05'}, {'10','05'}}
 
     %% ex 1, 2 e 3
     exp = acc_file{1}{1};
     user = acc_file{1}{2};
-    fileName = sprintf('acc_exp%s_user%s.txt', exp, user);
+    fileName = sprintf('acc_exp%s_user%s.txt', exp, user)
     dacc = importfile(['HAPT Data Set/RawData/' fileName], '%f%f%f%[^\n\r]');
     
     % get labels for current file
@@ -59,7 +60,7 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     % <---- fazer plot
 
     %% ex. 4.1
-    % calcular DFT com aplicação de diferentes janelas
+    % calcular DFT com aplica????o de diferentes janelas
     % export plots to PDF files for analysis...
     %{
     figure(2);
@@ -120,118 +121,42 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     %}
 
 %% 4.2
-%{
-%primeira implementacao abordado os 3 eixos em simultaneo
-numeroElementos=0;
-total=0;
-for k=1:numel(ix_labels)
-    if all_labels(ix_labels(k),3) < 4
-        %vai carregar a informacao dos 3 eixos e calcular a respectiva dft
-        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
-        xdft=fftshift(fft(x));
-        %f=linspace(-25,25,numel(x));
-        
-        y=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),2);
-        ydft=fftshift(fft(y));
-        %f=linspace(-25,25,numel(y));
-        
-        z=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
-        zdft=fftshift(fft(z));
-        %f=linspace(-25,25,numel(x));
-        
-        %associa a informacao dos 3 eixos numa so funcao "mag"
-        mag = sqrt(sum(xdft.^2 + ydft.^2 + zdft.^2, 2));
-        %delimita o ponto medio para de seguida determinar os picos
-        magNoG = mag - mean(mag);
-        minPeakHeight = std(magNoG);
-        [pks, locs] = findpeaks(abs(mag), 'MINPEAKHEIGHT', minPeakHeight);
-        %determina a frequencia do primeiro pico e multiplica pelo tempo 60s
-        %mag(locs(1))*60
-        total=total+ (mag(locs(1))*60);
-        numeroElementos=numeroElementos+1;
-    end
-end
-media=total/numeroElementos
-%}
 
-
-%segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
-%funcionar
-%{
-numeroElementos1=0;
-total1=0;
-for k=1:numel(ix_labels)
-    if all_labels(ix_labels(k),3) < 4
-        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
-        [f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
-        plot(f,abs(xdft))
-        max_x = max(abs(xdft));
-        min_mag = max_x-(0.8*max_x);
-        [pks,locs] = findpeaks(abs(xdft),'MINPEAKHEIGHT', min_mag);
-        %[amplitude, indice] = max(xdft)
-        %[pks,locs] = findpeaks(abs(xdft), Fs, 'Threshold', abs(f(indice))-0.01);
-        
-        % plot to debug peaks
-        %figure;
-        %plot(abs(xdft))
-        %hold on
-        %plot(locs,pks,'ro')
-        %hold off
-        
-        l=1;
-        if l < numel(locs)
-            while(f(locs(l))<=0.5)
-                l=l+1;
-            end
-            f(locs(l))
-            steps = f(locs(l))*60
-            %guardar num array e chamr std no fim
-            total1=total1 + steps;
-            numeroElementos1=numeroElementos1+1;
-        else
-            disp(fileName)
-            disp(k)
-            disp('ERROR: could not calculate steps')
-        end
-    end
-end
-media1=total1/numeroElementos1
-%faltam em ambos os casos o desvio padrao
-%}
-
-% 4.2 terceira tentativ
+% 4.2
 %segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
 %funcionar
 
-numeroElementos1=0;
-total1=0;
-fs=50;
+
 for k=1:numel(ix_labels)
-    if all_labels(ix_labels(k),3) < 4
-        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
+    if all_labels(ix_labels(k),3) == 3%1 walking, 2 walking upstairs 3 walking downstairs
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);%1-x 2-y 3-z
         %[f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
-        xdft = fftshift(fft((x)));
+        xdft = fftshift(fft((x.*hamming(numel(x)))));
         xdft(abs(xdft)<0.001)=0;
         xdft = abs(xdft);
         N = numel(x);
         if(mod(N,2)==0)
-            f = -fs/2:fs/N:fs/2-fs/N;
+            f = -Fs/2:Fs/N:Fs/2-Fs/N;
         else
-            f = -fs/2+fs/(2*N):fs/N:fs/2-fs/(2*N);
+            f = -Fs/2+Fs/(2*N):Fs/N:Fs/2-Fs/(2*N);
         end
-        
+        close all
         plot(f,xdft);
         hold on
-        [pks,locs] = findpeaks(xdft,'MinPeakProminence', 10);
-        index=find(f(locs)>-0.00001 & f(locs)<0.00001);
-        f1 = f(locs);
-        %plot(f1(index+1),10,'or');
-        %pause();
-        
-        freq = f1(index+1)*60
+        [pks,locs] = findpeaks(abs(xdft),'MinPeakProminence',8);
+            index=find(f(locs)>-0.00001 & f(locs)<0.00001);
+        if index > 1
+            f1 = f(locs);
+            %plot(f1(index+1),10,'or');
+            %pause();
+
+            freq = f1(index+1)*60
+            saveSteps(contador)= freq;
+            contador=contador+1;
+        end
     end
 end
-media1=total1/numeroElementos1
+
 %faltam em ambos os casos o desvio padrao
 
 %% 4.3
@@ -304,24 +229,20 @@ hold on
 scatter3(XDin,YDin,ZDin, 'r', 'filled')
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
 
-%}
-
-%% 4.4
 
 
-
-%% ex. 5.
+    %% ex. 5.
     % Freq/Time min |Power
     % STFT no eixo Z para um ficheiro de dados ?? escolha
     
-    
+    i = 3; %eixo z
     % j = 13; %activity
     for j=1:numel(ix_labels)
-        activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),3);
-        %{
+        activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
+
         N = numel(activity);
         Tframe= 0.128; %largura da janela em analise em s
-        Toverlap = 0.064; % sobreposicao das janelas em s
+        Toverlap = 0.064; % sobreposi????o das janelas em s
         Nframe= round(Tframe*Fs); %numero de amostras na janela
         Noverlap = round(Toverlap*Fs); % numero de amostras sobrepostas
 
@@ -336,7 +257,7 @@ scatter3(XStat,YStat,ZStat, 'b', 'filled')
         freq_relev = [];
         nframes = 0; %para guardar freq relevantes
         tframes = [];
-        
+
         % itera sobre sinal da actividade com janelas sobrepostas
         % ver na fp 9...
         for ii = 1:Nframe-Noverlap:N-Nframe
@@ -354,41 +275,15 @@ scatter3(XStat,YStat,ZStat, 'b', 'filled')
 
             % encontrar as frequencias correspondentes ao maximo de 
             %freq_relev = [freq_relev, f_frame(ind(2))]; % buscar o indice 2 para a frequencia positiva
-            
-            nframes = nframes+1;
-            
-            
-        end
-        %}
-        
-        
-        %{
-        wlen = 0.128; %largura da janela em analise em s
-        hop = 0.064; % sobreposicao das janelas em s
-        nfft = round(wlen*Fs); %numero de amostras na janela
-        
-        % stft matrix size estimation and preallocation
-        NUP = ceil((1+nfft)/2);     % calculate the number of unique fft points
-        L = 1+fix((xlen-wlen)/hop); % calculate the number of signal frames
-        STFT = zeros(NUP, L);       % preallocate the stft matrix
-        %win = blackman(wlen, 'periodic'); 
-        
-        figure(1)
-        stft(activity,'Window',kaiser(256,5),'OverlapLength',Fs);
-        colormap bone
-        view(-45,65)
-        %}
-        
-        
-       % plot(activity)
-        %xlabel('t [s]')
-        %ylabel('f [Hz]')
-        %title('Sequencia de frequencias por janelas');
-    end
-    
 
+            nframes = nframes+1;
+        end
+    end
+%}
 
 end
+media= mean(nonzeros(saveSteps))
+desvioPadrao=std(nonzeros(saveSteps))
 
 hold off
 grid on
