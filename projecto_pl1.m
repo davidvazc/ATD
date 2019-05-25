@@ -154,19 +154,22 @@ end
 media=total/numeroElementos
 %}
 
-%{
+
 %segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
 %funcionar
+%{
 numeroElementos1=0;
 total1=0;
 for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) < 4
-        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),3);
+        x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
         [f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
-        %plot(f,abs(xdft))
+        plot(f,abs(xdft))
         max_x = max(abs(xdft));
         min_mag = max_x-(0.8*max_x);
         [pks,locs] = findpeaks(abs(xdft),'MINPEAKHEIGHT', min_mag);
+        %[amplitude, indice] = max(xdft)
+        %[pks,locs] = findpeaks(abs(xdft), Fs, 'Threshold', abs(f(indice))-0.01);
         
         % plot to debug peaks
         %figure;
@@ -177,9 +180,10 @@ for k=1:numel(ix_labels)
         
         l=1;
         if l < numel(locs)
-            while(f(locs(l))<=0)
+            while(f(locs(l))<=0.5)
                 l=l+1;
             end
+            f(locs(l))
             steps = f(locs(l))*60
             %guardar num array e chamr std no fim
             total1=total1 + steps;
@@ -195,26 +199,39 @@ media1=total1/numeroElementos1
 %faltam em ambos os casos o desvio padrao
 %}
 
-% 4.2 terceira tentativa
+% 4.2 terceira tentativ
+%segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
+%funcionar
 numeroElementos1=0;
 total1=0;
+fs=50;
 for k=1:numel(ix_labels)
     if all_labels(ix_labels(k),3) < 4
         x=data(all_labels(ix_labels(k),4): all_labels(ix_labels(k),5),1);
-        [f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
-        xd=detrend(xdft);
-        [amplitude,indice]=max(xd);
-        amplitude
-        indice
-        plot(f,abs(xdft)) 
+        %[f,xdft] = my_fft(x.*hamming(numel(x)),Fs);
+        xdft = fftshift(fft((x)));
+        xdft(abs(xdft)<0.001)=0;
+        xdft = abs(xdft);
+        N = numel(x);
+        if(mod(N,2)==0)
+            f = -fs/2:fs/N:fs/2-fs/N;
+        else
+            f = -fs/2+fs/(2*N):fs/N:fs/2-fs/(2*N);
+        end
         
+        plot(f,xdft);
+        hold on
+        [pks,locs] = findpeaks(xdft,'MinPeakProminence', 10);
+        index=find(f(locs)>-0.00001 & f(locs)<0.00001);
+        f1 = f(locs);
+        %plot(f1(index+1),10,'or');
+        %pause();
         
-        
+        freq = f1(index+1)*60
     end
 end
 media1=total1/numeroElementos1
 %faltam em ambos os casos o desvio padrao
-
 
 %% 4.3
 %{
@@ -285,13 +302,13 @@ ZStat=picsZ(1:12);
 hold on
 scatter3(XDin,YDin,ZDin, 'r', 'filled')
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
-%}
+
 
 
     %% ex. 5.
     % Freq/Time min |Power
     % STFT no eixo Z para um ficheiro de dados ?? escolha
-    %{
+    
     i = 3; %eixo z
     % j = 13; %activity
     for j=1:numel(ix_labels)
