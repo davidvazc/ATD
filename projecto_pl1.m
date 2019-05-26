@@ -9,6 +9,7 @@ all_labels = importfile('HAPT Data Set/RawData/labels.txt', '%f%f%f%f%f%[^\n\r]'
 close all
 saveSteps = zeros(200,1);
 contador=1;
+figure(42)
 
 for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'}, {'06','03'}, {'07','04'}, {'08','04'}, {'09','05'}, {'10','05'}}
 
@@ -39,7 +40,7 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     % data size
     [n_points, n_plots]=size(data);
 
-    % fazer plot dos dados ---->
+    % descomentar para fazer plot dos dados ---->
     %{
     figure(str2num(exp))
     for i=1:n_plots
@@ -60,20 +61,19 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
     end
     %}
     % <---- fazer plot
-
+    %{
     %% ex. 4.1
     % calcular DFT com aplica????o de diferentes janelas
     % export plots to PDF files for analysis...
-    %{
-    figure(2);
-    hold on % all plots on same drawing
+    close all
+    %figure(2);
+    %hold on % all plots on same drawing
     
     for j=1:numel(ix_labels)
         %j=13; % signal segment / activity; exp01: 1=STANDING, 2=STAND_TO_SIT, 3=SITTING, 13-16=Walking, 18,20=WALKING_UPSTAIRS...
         % i=3; % x,y,z axis
         for i = 1:3 % i=axis
-            close all
-            figure(i+1);
+            figure(j*10+i);
 
             activity = data(all_labels(ix_labels(j),4): all_labels(ix_labels(j),5),i);
             activity_label = activities{all_labels(ix_labels(j),3)};
@@ -110,24 +110,23 @@ for acc_file = {{'01','01'}, {'02','01'}, {'03','02'}, {'04','02'}, {'05','03'},
                 %subplot(3,2,w+2)
                 plot(f,abs(X)), hold on
                 %title(['DFT do Sinal - ' activity_label ' - ' windows_names{w}]);
-                title(['DFT do Sinal - ' activity_label]);
+                title(['DFT do Sinal - '  current_axis{i} ' - ' activity_label]);
                 ylabel('Magnitude = |X|')
                 xlabel('f [Hz]')
                 %axis tight
             end
             legend(windows_names,'Location','southwest')
             % export plot to file for analysis
-            saveas(figure(i+1), [pwd, '/exports/export_' num2str(j) '_' all_labels(ix_labels(j),3) '_' current_axis{i} '_' fileName '.pdf']);
+            saveas(figure(j*10+i), [pwd, '/exports/export_' num2str(j) '_' all_labels(ix_labels(j),3) '_' current_axis{i} '_' fileName '.png']);
         end
     end
-    %}
+    
 
 %% 4.2
 
 % 4.2
 %segunda implementacao aboradando agora apenas o eixo dos z's nao esta a
 %funcionar
-%{
 
 numeroElementos1=0;
 total1=0;
@@ -166,7 +165,7 @@ end
 %faltam em ambos os casos o desvio padrao
 %}
 %% 4.3 - Com DFT
-%{
+
 peaks_X = zeros(numel(ix_labels),1);
 peaks_Y = zeros(numel(ix_labels),1);
 peaks_Z = zeros(numel(ix_labels),1);
@@ -190,9 +189,9 @@ for k=1:numel(ix_labels)
     
     N = numel(x);
     if(mod(N,2)==0)
-        f = -Fs/2:Fs/N:fs/2-Fs/N;
+        f = -Fs/2:Fs/N:Fs/2-Fs/N;
     else
-        f = -Fs/2+Fs/(2*N):Fs/N:Fs/2-fs/(2*N);
+        f = -Fs/2+Fs/(2*N):Fs/N:Fs/2-Fs/(2*N);
     end
 
     %plot(f,xdft);
@@ -208,6 +207,8 @@ for k=1:numel(ix_labels)
     end
     
     index = find(f(locs)>-0.00001 & f(locs)<0.00001);
+    indexY = find(f(locs_y)>-0.00001 & f(locs_y)<0.00001);
+    indexZ = find(f(locs_z)>-0.00001 & f(locs_z)<0.00001);
     
     f1 = f(locs);
     f2 = f(locs_y);
@@ -220,15 +221,15 @@ for k=1:numel(ix_labels)
     end
     
     
-    if indexY ~= 0 & index < numel(f2)
-        peaks_Y(k) = f2(index+1);
+    if indexY ~= 0 & indexY < numel(f2)
+        peaks_Y(k) = f2(indexY+1);
     else
         peaks_Y(k) = 0;
     end
     
     
-    if index ~= 0 & index < numel(f3)
-       peaks_Z(k) = f3(index+1);
+    if indexZ ~= 0 & indexZ < numel(f3)
+       peaks_Z(k) = f3(indexZ+1);
     else
         peaks_Z(k) = 0;
     end
@@ -242,6 +243,8 @@ end
 %hold on
 %scatter3(peaks_X,peaks_Y,peaks_Z, 'r', 'filled');
 
+% ex. 4.3 - visualização
+%{
 figure(41)
 title('Actividades estáticas vs. dinâmicas - DFT');
 XDin=peaks_X(13:numel(peaks_X));
@@ -254,21 +257,47 @@ hold on
 scatter3(XDin,YDin,ZDin, 'r', 'filled')
 scatter3(XStat,YStat,ZStat, 'b', 'filled')
 grid on
+%}
 
-figure(42)
+% ex. 4.5 - visualização
 title('Actividades dinâmicas - DFT');
+dinW=zeros(50,3); % to hold peaks for each walk type
+dinWU=zeros(50,3);
+dinWD=zeros(50,3);
 hold on
-for k=13:numel(ix_labels)
-    if peaks_X(k:k) > 0
-        ix = find(strcmp(activities, activities{all_labels(ix_labels(k),3)}));
-        colour = char(colours(ix));
-        scatter3(peaks_X(k:k),peaks_Y(k:k),peaks_Z(k:k), colour, 'filled')
+for k=1:numel(ix_labels)
+    if all_labels(ix_labels(k),3) < 4
+        ix = find(strcmp(activities, activities{all_labels(ix_labels(k),3)})); % get activity type
+        if ix == 1
+            % walk
+            dinW(k,1)=peaks_X(k:k);
+            dinW(k,2)=peaks_Y(k:k);
+            dinW(k,3)=peaks_Z(k:k);
+        elseif ix == 2
+            % walk up
+            dinWU(k,1)=peaks_X(k:k);
+            dinWU(k,2)=peaks_Y(k:k);
+            dinWU(k,3)=peaks_Z(k:k);
+        elseif ix == 3
+            % walk down
+            dinWD(k,1)=peaks_X(k:k);
+            dinWD(k,2)=peaks_Y(k:k);
+            dinWD(k,3)=peaks_Z(k:k);
+        end
     end
 end
+hold on
+scatter3(dinW(:,1),dinW(:,2),dinW(:,3), 'r', 'filled')
+scatter3(dinWU(:,1),dinWU(:,2),dinWU(:,3), 'g', 'filled')
+scatter3(dinWD(:,1),dinWD(:,2),dinWD(:,3), 'b', 'filled')
+xlabel(Sensors(1))
+ylabel(Sensors(2))
+zlabel(Sensors(3))
 legend({'W','W\_U','W\_D'},'Location','southwest')
-hold off
-grid on
 
+%}
+
+%{
 %% 4.3 - sem DFT
 
 peaks_X = zeros(numel(ix_labels),1);
@@ -426,5 +455,6 @@ end
 media= mean(nonzeros(saveSteps))
 desvioPadrao=std(nonzeros(saveSteps))
 
+grid on
 hold off
 view(-80, 22)
