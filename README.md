@@ -9,3 +9,6 @@ pode ser feito através do uso de acelerómetros, que podem ser encontrados em t
 
   Objetivo: Este mini projeto visa a análise em frequência de sinais recolhidos de acelerómetros de 
 telemóveis com o objetivo de classificar entre 12 movimentos
+
+
+Relatório: https://docs.google.com/document/d/1k5LcpV26TmaBi5hk76DT6iyVDRsR5eppWJQGmy-L6po/edit?ts=5ce989de#
